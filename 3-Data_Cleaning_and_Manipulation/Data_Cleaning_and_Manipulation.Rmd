@@ -1,0 +1,175 @@
+---
+title: "Data Cleaning and Manipulation"
+author: "Fadi Murad"
+date: "June 20, 2018"
+output:
+  html_document:
+    theme: cerulean
+    toc: true
+    toc_depth: 4 
+    toc_float: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message=FALSE,warning=FALSE ,message=FALSE,comment="")
+```
+
+### 1- Data Cleaning
+
+*Note: I saved the training and test sets from the data exploration step as RData files to be able to use it in this R MarkDown file
+*
+```{r }
+load(file="tr.RData")
+load(file="test.RData")
+
+#Creating vectors contains the columns index for categorical and numeric columns 
+catcol <- c(2:5,7,8:16,20:29,31:38,40)
+numcol <- c(setdiff(1:40,catcol),41)
+```
+
+
+first let us split the data sets to numeric and categorical, it's easier for this step
+```{r}
+tr_num <- tr[numcol]
+tr_cat <- tr[catcol]
+
+test_num <- test[numcol]
+test_cat <- test[catcol]
+```
+
+
+<br />  
+
+#### 1.1 Missing Values
+Let’s check for missing values in numeric variables.
+
+```{r}
+table(is.na(tr_num))
+table(is.na(test_num))
+```
+
+There is no missing values in the numerical variables which means we save some time :)
+
+Anyhow, let us turn our focus now to the missing values in the categorical variables, We’ll use base sapply() to find out percentage of missing values per each variable.
+
+```{r}
+trCatMissing <- sapply(tr_cat, function(x){sum(is.na(x))/length(x)})
+testCatMissing <- sapply(test_cat, function(x){sum(is.na(x)/length(x))})
+```
+
+ 
+There are a few variables have almost 50% missing values, We will dorp off variables with more than 10% missing values from our set
+
+
+```{r}
+tr_cat <- subset(tr_cat, select = trCatMissing < 0.1 )
+test_cat <- subset(test_cat, select = trCatMissing < 0.1)
+
+```
+
+For the variables with less than 10% missing value, we will replace 'NA' with 'Not Available':  
+convert to matrix, replace 'null' with 'Not Available', and convert back to data.frame
+
+```{r}
+tr_cat <- as.matrix(tr_cat)
+tr_cat[is.na(tr_cat)]<-"Not Available"
+tr_cat <- as.data.frame(tr_cat)
+
+test_cat <- as.matrix(test_cat)
+test_cat[is.na(test_cat)]<-"Not Available"
+test_cat <- as.data.frame(test_cat)
+
+```
+
+
+<br />  
+
+#### 1.2 Fields with very low information to offer
+
+During the exploration setp we saw alot of variables have one level with very high frequency (around 90% of the data belong to this level) while the other levels have very low frequenct (between 1% to 4%). Due to this reason we better not consider this variables in our model  
+
+Below is a list of those variables, you can check yourself using levelPer function, below you can find a sample
+
+```{r}
+#levelPer function
+levelPer <- function(levelFreqPercentage){
+  prop.table(table(levelFreqPercentage))
+}
+levelPer(tr$hispanic_origin)
+
+
+#categorical variable to drop 
+lowInfo <- c("race","hispanic_origin","member_of_labor_union","reason_for_unemployment","region_of_previous_residence",
+             "state_of_previous_residence","live_1_year_ago","country_father","country_mother","country_self","citizenship",
+             "business_or_self_employed","fill_questionnaire_veteran_admin","enrolled_in_edu_inst_lastwk","year")
+
+
+
+#drop off variables from the train and test sets 
+tr_cat[lowInfo] <- NULL
+test_cat[lowInfo] <- NULL
+```
+
+
+<br />  
+
+#### 1.3 Multicollinearity
+We notice earlier in the exploration step (correlation matrix) that there is a strong correlation between num_person_Worked_employer and weeks_worked_in_year, it's *~ +0.75*
+we need to drop off one one these variables and I prefer to drop weeks_worked_in_year as most of the data fall under to values 0 and 52 week while num_person_Worked_employer looks more informative to our model
+
+
+```{r}
+tr_num$weeks_worked_in_year <- NULL
+test_num$weeks_worked_in_year <- NULL
+
+```
+
+<br />  
+
+### 2- Data Manipulation
+
+The last step before start building our model is the data manipulation, 
+In this stage we will try to shape the data in way that could serve our model better than
+the original shape (to get more information)
+as we did in the exploration step when we regroup some of the categrical variable level or when
+we grouped the numeric variables as categrical with only 2 or 3 levels
+
+<br />  
+
+#### 2.1 Nomeric Variables:
+As we saw in the correlation matrix, there is no significant correlation between the target
+variable and the other numeric variables, therefore, it's better to reshape the numeric variables
+
+
+Variables with larg amount of zero value to be re-classifed to categorical variable with only 2 levels to zero and more than zero 
+
+
+```{r}
+tr_num$wage_per_hour <- as.factor(ifelse(tr_num$wage_per_hour == 0,"Zero","MoreThanZero"))
+tr_num$capital_gains <- as.factor(ifelse(tr_num$capital_gains == 0,"Zero","MoreThanZero"))
+tr_num$capital_losses <- as.factor(ifelse(tr_num$capital_losses == 0,"Zero","MoreThanZero"))
+tr_num$dividend_from_Stocks <- as.factor(ifelse(tr_num$dividend_from_Stocks == 0,"Zero","MoreThanZero"))
+
+test_num$wage_per_hour <- as.factor(ifelse(test_num$wage_per_hour == 0,"Zero","MoreThanZero"))
+test_num$capital_gains <- as.factor(ifelse(test_num$capital_gains == 0,"Zero","MoreThanZero"))
+test_num$capital_losses <- as.factor(ifelse(test_num$capital_losses == 0,"Zero","MoreThanZero"))
+test_num$dividend_from_Stocks <- as.factor(ifelse(test_num$dividend_from_Stocks == 0,"Zero","MoreThanZero"))
+
+```
+
+  
+<br />  
+Finally, we will combine the numeric and categorical subsets to train and test sets
+
+```{r results="hide"}
+f_tr <- cbind(tr_num,tr_cat)
+f_test <- cbind(test_num,test_cat)
+
+#check our result
+str(f_tr)
+str(f_test)
+```
+  
+<br />
+Now we have 22 variables (including the target variable) ready to be used in the machine learning step

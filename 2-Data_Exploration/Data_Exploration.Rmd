@@ -3,9 +3,12 @@ title: "Data Exploration"
 author: "Fadi Murad"
 date: "June 1, 2018"
 output:
-  html_document: default
-  word_document: default
-  pdf_document: default
+  html_document:
+    theme: cerulean
+    toc: true
+    toc_depth: 4 
+    toc_float: true
+
 ---
 
 ```{r setup, include=FALSE}
@@ -15,6 +18,9 @@ knitr::opts_chunk$set(echo = TRUE,message=FALSE,warning=FALSE ,message=FALSE,com
   
 This R Markdown document contains the data exploration step for this project which include loading data, prepare data and taking a look at each variable in order to understand the data   
 For this project, we’ve taken the data set from UCI Machine Learning Repository, you can find zip files (train set & test set) in the folder *1-Data_Set* this files contains column names and ready to be loaded, but due to the huge sizes of this files I'v already created train and test RData files to be used in this project.    
+
+
+##A. ِِLoading and Checking Data
 
 First, we will load the train and test set and take a look, we will call the train dataset *tr* and the test set *test* and we will use it for the whole project  
 
@@ -44,7 +50,7 @@ str(test)
 ```
 
   
-the train data has 199,523 rows and 41 columns while the train set has 99,762 rows and 41 columns, also we can notice that most of the variables class needed to be modified, but first let us start with the target variable (income_level)
+The train data has 199,523 rows and 41 columns while the train set has 99,762 rows and 41 columns, also we can notice that most of the variables class needed to be modified, but first let us start with the target variable (income_level)
 
 ```{r}
 
@@ -59,7 +65,8 @@ summarise(group_by(test,income_level),n=n()) #values count
 ```
 
 
-  
+<br />  
+
 As this is a binary classification problem, I will encode the income_level to 0 & 1 instead of -50000 & +50000 (please note there is a difference in the format of this column between train and test set) also i will add new income_level_1 column but with logical class (TRUE & FALSE), each column will be useful for different usage in the following steps.
 
 ```{r}
@@ -71,7 +78,9 @@ test$income_level[test$income_level=="-50000"] <- 0
 test$income_level[test$income_level=="50000+."] <- 1
 
 ```
-  
+
+<br />  
+
 Now let us go back to the other variables in the data set, as we noticed before (using str function) there is a need to change the class of most of the variables according to thier nature 
 
 ```{r}
@@ -88,7 +97,9 @@ test[catcol] <- lapply(test[catcol], as.factor)
 
 ```
 
-  
+
+<br />  
+
 Before starting with visualizing the data and creating plots for each variables let us take a look at the categorical variables that have a huge numbers of levels and try to re-group this variables to less number of categories if possible
 
 ```{r}
@@ -129,13 +140,15 @@ Zero_value <- function(a){
 
 ```
 
+<br />  
 
-##Visualizing Variable:
+## B. Visualizing Variables
 **Note**: the term high/low percentage of people with income level (1) means that total of income level 1 devided by total people in the same category, then I compare this percentage to the other categories percetages and the overall income level 1 percetage *(which is 6%)* 
+<br />  
 
-###Numeric Variables:
+### 1. Numeric Variables
 
-####1. Age:  
+####1.1 Age:  
 We can notice from the 1st plot the declining in the frequency after age 50, in the 2nd plot we can see that most of the people with income_level 1 fall into the age between 25 and 75 years  
 Also we can notice the data has outliers at age 90
 
@@ -151,9 +164,10 @@ ggplot(tr,aes(x=age,y=..count.., fill = as.factor(income_level))) +
 
 ```
 
+<br /> 
 
-####2.wage_per_hour  
-for this variable *94%* of the data has zero value which is very high number,
+####1.2 wage_per_hour  
+For this variable *94%* of the data has zero value which is very high number,
 also we can notice that most of the people with income level 1 has a wage_per_hour beween *1000* and *4000*  
 
 ```{r}
@@ -165,8 +179,9 @@ ggplot(tr,aes(x=age,y= wage_per_hour)) +
 Zero_value(tr$wage_per_hour)
 
 ```
+<br />  
 
-####3. capital_gains  
+####1.3 capital_gains  
 *96%* of the data in this variable has zero value  
 The first plot shows the capital gain (I used Log2 for better visualization), Age, and Income_level distribution
 
@@ -192,8 +207,9 @@ ggplot(tr,aes(x=ifelse(capital_gains == 0,"Zero","MoreThanZero"),fill=as.factor(
 ```
 
 
+<br />  
 
-####4. capital_losses  
+####1.4 capital_losses  
 
 *98%* of the data has zero value
 Also here, almost half of the people with capital losses tends to get +50000 income which is not the case for the people with zero capital gain 
@@ -212,8 +228,9 @@ ggplot(tr,aes(x=ifelse(capital_losses == 0,"Zero","MoreThanZero"),fill=as.factor
 
 ```
 
+<br />  
 
-####5. dividend_from_Stocks  
+####1.5 dividend_from_Stocks  
 *89%* of the data has zero value
 Almost one third of the people with dividend tends to get +50000, which is a high pecentage comparing with the the zero dividend category 
 
@@ -233,8 +250,9 @@ ggplot(tr,aes(x=ifelse(dividend_from_Stocks == 0,"Zero","MoreThanZero"),fill=as.
 ```
 
 
+<br />  
 
-####6. num_person_Worked_employer
+####1.6 num_person_Worked_employer
 ```{r}
 ggplot(tr,aes(x=num_person_Worked_employer,y=..count.., fill = as.factor(income_level))) + geom_bar(position="dodge")+ scale_x_continuous("num_person_Worked_employer", breaks = seq(0,6,1)) + theme(panel.background = element_blank())+labs(fill = "income level")
 
@@ -243,8 +261,9 @@ Zero_value(tr$num_person_Worked_employer) #48% zero values
 ```
 
 
+<br />  
 
-####7. weeks_worked_in_year
+####1.7 weeks_worked_in_year
 For better visualization and becuase most of the values in this variable fall into 0 and 52 ,I grouped all the other values into one group (1 to 51 weeks)
 People who work 52 weeks has higher probability of making +50000 income
 
@@ -254,8 +273,9 @@ ggplot(tr,aes(x=ifelse(weeks_worked_in_year == 0,"0",ifelse(weeks_worked_in_year
   labs(fill = "income level")+labs(x="dividend from stocks")
 
 ```
+<br />
 
-####Correlation between numeric variables 
+####1.8 Correlation between numeric variables 
 Below we can see a visualization for the correlation matrix between the numeric variables.  
 the target variable doesn't have a good correlation with any numeric variables, the best correlation for the target variable is with weeks_worked_in_year and capital_gains (0.26 & 0.24 respectively)
 
@@ -265,9 +285,11 @@ corrplot(numCor, type = "upper", order = "hclust",
          tl.col = "black")
 ```
 
-###Categorical Variables
+<br />  
 
-#### 1. class_of_worker
+### 2. Categorical Variables
+
+#### 2.1 class_of_worker
 We can see that the majority of income level 1 fall into the private category  
 The self-employed category has the highest percentage of people who has income level 1 (income level 1 / total people in the same category)
 
@@ -278,8 +300,9 @@ ggplot(tr,aes(x = tr$class_of_worker_Level, fill = as.factor(income_level))) +
 
 ```
 
+<br />  
 
-#### 2. major_occupation_code & occupation_code
+#### 2.2 major_occupation_code & occupation_code
 it's clear that some occupations have higher percentage of income level 1, specially: Executive admin and managerial, profissional specialty and, sales  
 We can dig deeper into each major occupation and its secondary occupation codes in the 2nd plot 
 
@@ -294,8 +317,9 @@ ggplot(tr,aes(x = occupation_code, fill = as.factor(income_level))) + geom_bar(p
 
 ```
 
+<br />  
 
-#### 3. education
+#### 2.3 education
 More than 50% of the people who have Doctorate or prof school degrees have income level 1.
 also we can say that master and Bachelors degrees has a high percentage of people with income level 1 coparing to rest of the degrees
 
@@ -304,8 +328,9 @@ ggplot(tr,aes(x =tr$Education_Level ,fill= as.factor(income_level))) + geom_bar(
   theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 70,hjust = 1,size=9)) + ggtitle("education vs. income level")+labs(fill = "income level")
 ```
 
+<br />  
 
-#### 4. enrolled_in_edu_inst_lastwk
+#### 2.4 enrolled_in_edu_inst_lastwk
 No obvious trend
 ```{r}
 ggplot(tr,aes(x = tr$enrolled_in_edu_inst_lastwk, fill = as.factor(income_level))) + 
@@ -314,8 +339,9 @@ ggplot(tr,aes(x = tr$enrolled_in_edu_inst_lastwk, fill = as.factor(income_level)
 
 ```
 
+<br />  
 
-#### 5. marital_status
+#### 2.5 marital_status
 The never-married category has low percent of the income level 1 which is understandable becuase the category contains people under 18, while married and divorced categories have a high percent of income level 1
 
 ```{r}
@@ -325,8 +351,9 @@ ggplot(tr,aes(x = tr$marital_status, fill = as.factor(income_level))) +
 
 ```
 
+<br />  
 
-#### 6. major_industry_code
+#### 2.6 major_industry_code
 ```{r}
 ggplot(tr,aes(x = tr$major_industry_code, fill = as.factor(income_level))) +
   geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 70,hjust = 1,size=9))+
@@ -334,8 +361,9 @@ ggplot(tr,aes(x = tr$major_industry_code, fill = as.factor(income_level))) +
 
 ```
 
+<br />  
 
-#### 7- race
+#### 2.7 race
 more than *170,000* records out of *200,000* fall into one category which makes this variable hard to include in the selected variable for our model
 
 ```{r}
@@ -345,8 +373,9 @@ ggplot(tr,aes(x = tr$race, fill = as.factor(income_level))) +
 
 ```
 
+<br />  
 
-#### 8- hispanic_origin
+#### 2.8 hispanic_origin
 we can notice that all the hispanic origin people have income level 0, but again it's hard to include this variable in the model becuase the numbers of hispanic people is relativly small in this data set
 
 ```{r}
@@ -356,8 +385,9 @@ ggplot(tr,aes(x = tr$hispanic_origin, fill = as.factor(income_level))) +
 
 ```
 
+<br />  
 
-#### 9- sex
+#### 2.9 sex
 it's obvious the men have a higher percent of people with income level 1 (almost twice as women)
 
 ```{r}
@@ -367,8 +397,9 @@ ggplot(tr,aes(x = tr$sex, fill = as.factor(income_level))) + geom_bar(position="
 ```
 
 
+<br />  
 
-#### 10- member_of_labor_union
+#### 2.10 member_of_labor_union
 No obvious pattern here
 ```{r}
 ggplot(tr,aes(x = tr$member_of_labor_union, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
@@ -376,8 +407,9 @@ ggplot(tr,aes(x = tr$member_of_labor_union, fill = as.factor(income_level))) + g
 
 ```
 
+<br />  
 
-#### 11- reason_for_unemployment
+#### 2.11 reason_for_unemployment
 
 ```{r}
 ggplot(tr,aes(x = tr$reason_for_unemployment, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
@@ -385,8 +417,9 @@ ggplot(tr,aes(x = tr$reason_for_unemployment, fill = as.factor(income_level))) +
 
 ```
 
+<br />  
 
-#### 12- full_parttime_employment_stat
+#### 2.12 full_parttime_employment_stat
 I think we have wrong numbers here, becuase comparing the the numbers of children and armed force category with for example the numbers in the in the major industry code variable we can notice huge differences
 which make this variable unreliable for our model
 
@@ -396,8 +429,9 @@ ggplot(tr,aes(x = tr$full_parttime_employment_stat, fill = as.factor(income_leve
 
 ```
 
+<br />  
 
-#### 13. tax_filer_status
+#### 2.13 tax_filer_status
 No obvious pattern here
 ```{r}
 ggplot(tr,aes(x = tr$tax_filer_status, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
@@ -405,8 +439,9 @@ ggplot(tr,aes(x = tr$tax_filer_status, fill = as.factor(income_level))) + geom_b
 
 ```
 
+<br />  
 
-#### 14. region_of_previous_residence
+#### 2.14 region_of_previous_residence
 No obvious pattern here
 ```{r}
 ggplot(tr,aes(x = tr$region_of_previous_residence, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
@@ -414,11 +449,13 @@ ggplot(tr,aes(x = tr$region_of_previous_residence, fill = as.factor(income_level
 
 ```
 
+<br />  
 
-#### 15. state_of_previous_residence
+#### 2.15 state_of_previous_residence
 183,750 (92%) out of 200,000 records doesn't have a previous residence
+<br />  
 
-#### 16. d_household_summary
+#### 2.16 d_household_summary
 it's clear that most of the people with income level 1 fall under 2 categories: Householder and Spouse of householder 
 ```{r}
 ggplot(tr,aes(x = tr$d_household_summary_Level, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 70,hjust = 1,size=9))+
@@ -426,8 +463,9 @@ ggplot(tr,aes(x = tr$d_household_summary_Level, fill = as.factor(income_level)))
 
 ```
 
+<br />  
 
-#### 17. migration_msa
+#### 2.17 migration_msa
 
 ```{r}
 ggplot(tr,aes(x = tr$migration_msa, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
@@ -435,8 +473,9 @@ ggplot(tr,aes(x = tr$migration_msa, fill = as.factor(income_level))) + geom_bar(
 
 ```
 
+<br />  
 
-#### 18. migration_reg
+#### 2.18 migration_reg
 Almost same distribution for the income level between the categories
 
 ```{r}
@@ -445,8 +484,9 @@ ggplot(tr,aes(x = tr$migration_reg, fill = as.factor(income_level))) + geom_bar(
 
 ```
 
+<br />  
 
-#### 19. migration_within_reg
+#### 2.19 migration_within_reg
 Almost same distribution for the income level between the categories
 
 ```{r}
@@ -455,8 +495,9 @@ ggplot(tr,aes(x = tr$migration_within_reg, fill = as.factor(income_level))) + ge
 
 ```
 
+<br />  
 
-#### 20. live_1_year_ago
+#### 2.20 live_1_year_ago
 Almost same distribution for the income level between the categories, no obvious pattern
 
 ```{r}
@@ -465,8 +506,9 @@ ggplot(tr,aes(x = tr$live_1_year_ago, fill = as.factor(income_level))) + geom_ba
 
 ```
 
+<br />  
 
-#### 21. migration_sunbelt
+#### 2.21 migration_sunbelt
 almost same distribution for the income level between the categories
 
 ```{r}
@@ -475,8 +517,9 @@ ggplot(tr,aes(x = tr$migration_sunbelt, fill = as.factor(income_level))) + geom_
 
 ```
 
+<br />  
 
-#### 22. family_members_under_18
+#### 2.22 family_members_under_18
 We can ignor this variable as we can depend on the age variable for the same pattern (all childern have income level 0)
 ```{r}
 ggplot(tr,aes(x = tr$family_members_under_18, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
@@ -484,56 +527,64 @@ ggplot(tr,aes(x = tr$family_members_under_18, fill = as.factor(income_level))) +
 
 ```
 
-#### 23. country_father
-While eourp has slightly better pecentage for income level 1, central and south america has no people with income level 1
+<br />  
+
+#### 2.23 country_father
+While europe has slightly better pecentage for income level 1, central and south america has no people with income level 1
 
 ```{r}
 ggplot(tr,aes(x = tr$continent_father, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
   ggtitle("continent father per income level")+labs(fill = "income level")
 
 ```
+<br />  
 
-#### 24. country_mother
-As same as the country father variable, eourp has slightly better pecentage for income level 1, central and south america has no people with income level 1
+#### 2.24 country_mother
+As same as the country father variable, eourpe has slightly better pecentage for income level 1, central and south america has no people with income level 1
 ```{r}
 ggplot(tr,aes(x = tr$continent_mother, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
   ggtitle("continent mother per income level")+labs(fill = "income level")
 
 ```
+<br />  
 
-#### 25. country_self
-central and south america has no people with income level 1, while the others has almost the same distribution regarding the income level 
+#### 2.25 country_self
+central and South America has no people with income level 1, while the others has almost the same distribution regarding the income level 
 ```{r}
 ggplot(tr,aes(x = tr$continent_self, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
   ggtitle("continent self per income level")+labs(fill = "income level")
 
 ```
+<br />  
 
-#### 26. citizenship
+#### 2.26 citizenship
 
 ```{r}
 ggplot(tr,aes(x = tr$citizenship, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
   ggtitle("citizenship per income level")+labs(fill = "income level")
 
 ```
+<br />  
 
-#### 27. business_or_self_employed
+#### 2.27 business_or_self_employed
 
 ```{r}
 ggplot(tr,aes(x = tr$business_or_self_employed, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
   ggtitle("business or self employed per income level")+labs(fill = "income level")
 
 ```
+<br />  
 
-#### 28. fill_questionnaire_veteran_admin
+#### 2.28 fill_questionnaire_veteran_admin
 More than 97% of the data fall into one category, we will not consider this variable for our model
 ```{r}
 ggplot(tr,aes(x = tr$fill_questionnaire_veteran_admin, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
   ggtitle("fill questionnaire veteran admin per income level")+labs(fill = "income level")
 
 ```
+<br />  
 
-#### 29. veterans_benefits
+#### 2.29 veterans_benefits
 
 ```{r}
 ggplot(tr,aes(x = tr$veterans_benefits, fill = as.factor(income_level))) + geom_bar(position="dodge")+theme(panel.background = element_blank(),axis.text.x =element_text(angle  = 90,hjust = 1,size=9))+
@@ -541,8 +592,9 @@ ggplot(tr,aes(x = tr$veterans_benefits, fill = as.factor(income_level))) + geom_
   ggtitle("veterans benefits per income level")+labs(fill = "income level")
 
 ```
+<br />  
 
-#### 30. year
+#### 2.30 year
 same distribution of the income level for both years
 
 ```{r}
@@ -551,5 +603,4 @@ ggplot(tr,aes(x = tr$year, fill = as.factor(income_level))) + geom_bar(position=
 
 ```
 
-
-
+Now after we have fairly understanding for each variable, we are ready to start the next step **data cleaning and manipulation**.
