@@ -42,11 +42,11 @@ load(file="test.RData")
 ```
 ```{r eval=FALSE}
 #View train set
-View(tr)
 str(tr)
-dim(tr)
+Hmisc::describe(tr)
 
 str(test)
+Hmisc::describe(test)
 ```
 
   
@@ -281,7 +281,7 @@ the target variable doesn't have a good correlation with any numeric variables, 
 
 ```{r}
 numCor<-cor(tr[numcol])
-corrplot(numCor, type = "upper", order = "hclust", 
+corrplot(numCor, method = "number" , type = "upper", order = "hclust", 
          tl.col = "black")
 ```
 

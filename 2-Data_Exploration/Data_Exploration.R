@@ -8,7 +8,6 @@ library(dplyr)
 library(ggplot2)
 library(grid)
 library(Hmisc)
-library(dplyr)
 library(gridExtra)
 library(corrplot) 
 
@@ -21,16 +20,17 @@ library(corrplot)
 #save(tr, file="2-Data_Exploration/tr.RData")
 #save(test, file="2-Data_Exploration/test.RData")
 
-
 #View train set
-View(tr)
 str(tr)
-dim(tr)
+Hmisc::describe(tr)
+
 str(test)
+Hmisc::describe(test)
 
 #Creating vectors contains the columns index for categorical and numeric columns 
 catcol <- c(2:5,7,8:16,20:29,31:38,40)
 numcol <- c(setdiff(1:40,catcol),41)
+
 
 ##Checking the target variables
 unique(tr$income_level)
@@ -42,20 +42,20 @@ prop.table(table(test$income_level)) #value distribution
 summarise(group_by(test,income_level),n=n()) #values count
 
 
+#Changing income level values to 0 and 1
+tr$income_level[tr$income_level==-50000] <- 0
+tr$income_level[tr$income_level==+50000] <- 1
+
+test$income_level[test$income_level=="-50000"] <- 0
+test$income_level[test$income_level== "50000+."] <- 1
+
+
 #set the class for each column
 tr[numcol]<-  lapply(tr[numcol], as.numeric)
 tr[catcol] <- lapply(tr[catcol], as.factor)
 
 test[numcol]<-  lapply(test[numcol], as.numeric)
 test[catcol] <- lapply(test[catcol], as.factor)
-
-
-#Changing income level values to 0 and 1
-tr$income_level[tr$income_level==-50000] <- 0
-tr$income_level[tr$income_level==+50000] <- 1
-
-test$income_level[test$income_level=="-50000"] <- 0
-test$income_level[test$income_level=="50000+."] <- 1
 
 
 #create 2nd income level colum will logic class to be used later on
@@ -78,6 +78,9 @@ tr<- mutate(tr, d_household_summary_Level = ifelse(grepl('Child under 18', tr$d_
 tr$class_of_worker_Level <- as.factor(tr$class_of_worker_Level)
 tr$Education_Level <- as.factor(tr$Education_Level)
 tr$d_household_summary_Level <- as.factor(tr$d_household_summary_Level)
+
+
+load(file="2-Data_Exploration/countries.RData")
 
 #creating continent_self,continent_father, continent_mother columns using mapping data.fram "countries" 
 countries[1:6] <- lapply(countries, as.factor)
@@ -127,6 +130,7 @@ Zero_value(tr$capital_gains) #96% of the records have Zero value in this variabl
 ggplot(tr,aes(x=capital_gains,y=age,col=as.factor(income_level),alpha=0.5)) +
   geom_point(position="jitter")+scale_x_continuous(trans='log2') + labs(fill = "income level")+
   ggtitle("Capital Gain (log2) vs. Age per Income Level")
+
 
 
 #re-grouping
@@ -188,7 +192,7 @@ Zero_value(tr$weeks_worked_in_year) #48% zero values
 
 # Correlation 
 numCor<-cor(tr[numcol])
-corrplot(numCor, type = "upper", order = "hclust", 
+corrplot(numCor, method = "number" , type = "upper", order = "hclust", 
          tl.col = "black")
 
 ##Categorical Variables
