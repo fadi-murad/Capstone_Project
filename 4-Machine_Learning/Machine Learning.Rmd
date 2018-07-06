@@ -11,17 +11,17 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,message=FALSE,warning=FALSE ,message=FALSE,comment="")
+knitr::opts_chunk$set(echo = TRUE,message=FALSE,warning=FALSE,comment="")
 ```
 
 
 ### 1. Ideas to Start
-Before we start with modeling let us take a minute to clarify a few things about this step and imbalanced dataset issue
+Before we start with modeling let us take a minute to clarify a few things about this step and imbalanced dataset issue  
 
 ####1.1. Best Performance Measure
-*Is accurecy measure the best measure for imbalanced dataset classification model, Well! it's not*  
+***Is accuracy measure the best measure for imbalanced dataset classification model? Well! it's not***  
 
-It's very common for classification model (especially with simple rule based algorithm) to give ~90% accurecy when we have 90% of the instances fall into one class, simply because our models look at the data and cleverly decide that the best thing to do is to always predict this majority class and achieve high accuracy
+It's very common for classification model (especially with simple rule-based algorithm) to give ~90% accuracy when we have 90% of the instances fall into one class, simply because our models look at the data and cleverly decide that the best thing to do is to always predict this majority class and achieve high accuracy
 
 *Solution!*  
 
@@ -34,33 +34,41 @@ Below performance measures can give more insight into the accuracy of our model
 5. F score (A weighted average of precision and recall) = () 2 * (Precision * Recall)/ (Precision + Recall) – It is the harmonic mean of precision and recall. It is used to compare several models side-by-side. Higher the better.
 6. ROC Curves and Area Under Curve (AUC)
 
-In this project I chose *area under the curve (AUC)* to be the main performance measure.
-a. Usually AUC is a very good measure to be used with imbalanced data
-b. We are trying to build a model that have a balance between predicting the 2 classes we have (0 and 1 or <50,000 and > 50,000). in other words, we don't have a preference about the importance of one class over the other and AUC can do that, unlike Sensitivity for example which focus on increase the TP rate 
+In this project, we will use *Area Under the Curve (AUC)* to be the main performance measure.
+
+* Usually AUC is a very good measure to use with imbalanced data.
+* We are trying to build a model that has a good prediction for both classes (0 and 1 or <50,000 and > 50,000). in other words, we don't have a preference or we don't value one class accuracy over the other and AUC can do that, unlike Sensitivity for example which focus on increasing the TP rate  
+
 
 ####1.2. Sampling Techniques
-*Do we need to sampling techniques?*
-For imbalanced data, it's recommended to change the dataset to more balanced dataset in order to use it to build our predictive model
-This change is called sampling dataset and there are a few techniques, in this project we will use over-sampling & under-sampling techniques
-We will create 2 addional sets using the mentioned methods then we will apply the classification models on the original and the new sets and evaluate the results
+***Do we need sampling techniques?***  
+
+For imbalanced data, it's recommended to change the dataset to more balanced dataset in order to use it to build our predictive model  
+
+This change is called sampling dataset and there are a few techniques could be used, in this project, we will use over-sampling & under-sampling techniques  
+
+We will create 2 additional sets using the mentioned methods then we will apply the classification models on the original and the new sets and evaluate the results  
+
 
 #### 1.3. Algorithms
 We will use the below algorithms in this project:
+
 1. Logistic Regression: we will start with a simple classification model 
 2. Random Forest: often perform well on imbalanced data 
-3. naive Bayes:also good algorithm for the imbalanced data
+3. naive Bayes: also a good algorithm for the imbalanced data
 4. SVM
 
-We have 2 very good packages for predictive modeling CARET and MLR, due to the limited performance of my machine I will use MLR (train function in CARET package consum high portion of memory during the run time and create huge size objects)
+We have 2 very good packages for predictive modeling CARET and MLR, due to the limited performance of my machine I will use MLR (train function in CARET package consume a high portion of memory during the runtime and create huge size objects)
 
-*Now after we have a clear vision let us hit the road!*
+***Now after we have a clear vision let us hit the road!***  
+
+<br />  
 
 ### 2. Machine Learning
 
-We will create tasks for train, test, over sampling, under sampling and set our validaion strategy
+We will create tasks for train, test, over sampling, under sampling and set our validation strategy
 
 ```{r}
-library(caret)
 library(rJava)
 library(mlr)
 library(lattice)
@@ -73,23 +81,26 @@ set.seed(50)
 load(file="f_tr.RData")
 load(file="f_test.RData")
 
-
 #create task for train and test sets
 tr_Task <- makeClassifTask(data = f_tr,target = "income_level")
 test_Task <- makeClassifTask(data = f_test,target = "income_level")
 
-#Sampling in order to make the data balanced
+#Create sampling tasks in order to make the data balanced
+#under-sampling 
 tr_Under <- undersample(tr_Task,rate = 0.1) #keep only 10% of majority class
 
-#oversampling
+#over-sampling
 tr_Over <- oversample(tr_Task,rate=15) #multiply minority class 15 times
 
-#Validation Strategy
-res_Mod <- makeResampleDesc("CV",iters=4,stratify = TRUE)
+#Set Validation Strategy
+res_Mod <- makeResampleDesc("CV",iters=3,stratify = TRUE)
 
 ```
 
-Let us take a look to how important each variable to the target variable, we will use generateFilterValuesData function
+<br />  
+
+Let us take a look at how important each variable to the target variable, we will use **generateFilterValuesData** function  
+
 Education and major occupation code could provide the highest info for our model while race variable has very litter to offer here
 
 ```{r}
@@ -100,107 +111,219 @@ plotFilterValues(variable_Imp)
 
 
 #### 2.1 Logistic Reg Model
+
+*Set learner for logistic regression*
 ```{r}
-#set learner for log. reg.
-logR_learner <- makeLearner("classif.logreg",predict.type = "prob")
-
-
+logR_learner <- makeLearner("classif.logreg",predict.type = "prob", fix.factors.prediction = TRUE)
 
 ```
+Some predictive models return an error when we try to predict new dataset (test set in our case) if the new set does not have all levels of a factor.
+Logistic Reg. and Naive Bayes have this issue, in order to avoid this, we can add argument *fix.factors.prediction = TRUE* to our learner  
 
-```{r}
-#cross validation for the 3 sets (original, under, over)
-logRCV_Task<- resample(logR_learner,tr_Task,res_Mod,measures = list(auc,acc,tpr,tnr,fpr,fp,fn))
-logRCV_Under<- resample(logR_learner,tr_Under,res_Mod,measures = list(auc,acc,tpr,tnr,fpr,fp,fn))
-logRCV_Over<- resample(logR_learner,tr_Over,res_Mod,measures = list(auc,acc,tpr,tnr,fpr,fp,fn))
+*Cross-validation for the 3 sets (original, under, over)*
+
+```{r cache= TRUE }
+
+logRCV_Task<- resample(logR_learner,tr_Task,res_Mod,measures = list(auc,acc,tpr,tnr,fpr))
+logRCV_Under<- resample(logR_learner,tr_Under,res_Mod,measures = list(auc,acc,tpr,tnr,fpr))
+logRCV_Over<- resample(logR_learner,tr_Over,res_Mod,measures = list(auc,acc,tpr,tnr,fpr))
 ```
 
+*Save performance measures*
 ```{r}
-#save performance measures
 AgglogRCV_Task<- logRCV_Task$aggr
 AgglogRCV_Under<- logRCV_Under$aggr
 AgglogRCV_Over<- logRCV_Over$aggr
 
 ```
 
+*Remove resample objects to save memory*
 ```{r}
-#remove resample objects to save memory
+
 remove(logRCV_Task,logRCV_Over,logRCV_Under)
 ```
 
-
+*Show performance measures*
 ```{r}
-#Show performance measures
-AgglogRCV_Task
-AgglogRCV_Task
-AgglogRCV_Task
 
+cbind(as.data.frame(AgglogRCV_Task),as.data.frame(AgglogRCV_Under),as.data.frame(AgglogRCV_Over))
 ```
 
-For the original and over sampling task we got the below warnings:
-Warning messages:
-1: glm.fit: fitted probabilities numerically 0 or 1 occurred 
-2: In predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type ==  :prediction from a rank-deficient fit may be misleading
+For the original and oversampling task we got the below warnings:
+Warning messages:  
 
-All the three models have almost the same AUC but:
-It seems we have overfitting case for the original task, it tends to predict the majority class very good, while it has very poor reslut for the minority
-over and under sampling seem to have more balanced reslut 
+1: glm.fit: fitted probabilities numerically 0 or 1 occurred  
+
+2: In predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type ==  :prediction from a rank-deficient fit may be misleading  
 
 
+All the three models have almost the same AUC but it seems that the original task tends to predict the majority class very good, while it has very poor result for the minority  
+
+over and under sampling seem to have more balanced result 
+
+<br />  
 
 #### 2.2 Random Forest Model
 
+*Set learner for random forest*
 ```{r}
 randF_learner <- makeLearner("classif.h2o.randomForest",predict.type = "prob")
+```
 
-#cross function
-randFCV_Task<- resample(randF_learner,tr_Task,res_Mod,measures = list(auc,acc,tpr,tnr,fpr,fp,fn))
-randFCV_Under<- resample(randF_learner,tr_Under,res_Mod,measures = list(auc,acc,tpr,tnr,fpr,fp,fn))
-randFCV_Over<- resample(randF_learner,tr_Over,res_Mod,measures = list(auc,acc,tpr,tnr,fpr,fp,fn))
+*Cross function*
+```{r cache= TRUE, results='hide'}
+randFCV_Task<- resample(randF_learner,tr_Task,res_Mod,measures = list(auc,acc,tpr,tnr,fpr))
+randFCV_Under<- resample(randF_learner,tr_Under,res_Mod,
+                         measures = list(auc,acc,tpr,tnr,fpr))
+randFCV_Over<- resample(randF_learner,tr_Over,res_Mod,measures = list(auc,acc,tpr,tnr,fpr))
 
-#Summary of CV
+```
+
+
+*Save performance measures*
+```{r}
 AggrandFCV_Task<-randFCV_Task$aggr
 AggrandFCV_Under<-randFCV_Under$aggr
 AggrandFCV_Over<-randFCV_Over$aggr
 
-remove(randFCV_Over,randFCV_Task,randFCV_Under)
-
-AggrandFCV_Task
-AggrandFCV_Under
-AggrandFCV_Over
-
 ```
 
-
-
-As in logistic reg. original task perform bad for minority class, over task has very high auc 0.99 while under task has a high auc with 0.94
-I am gonna train both under and over tasks becuase i think over may be overfit model
+*Remove resample objects to save memory and Show performance measures in one table*
 
 ```{r}
-#Train & Prediction
-randF_Mod <- train(randF_learner, tr_Over)
-randF_Pre <- predict(randF_Mod,test_Task)
+remove(randFCV_Over,randFCV_Task,randFCV_Under)
 
-
-randF_Mod1 <- train(randF_learner, tr_Under)
-randF_Pre1 <- predict(randF_Mod1,test_Task)
-
-mlr::performance(randF_Pre,list(auc,acc,tpr,tnr,fpr,fp,fn))
-mlr::performance(randF_Pre1,list(auc,acc,tpr,tnr,fpr,fp,fn))
-
-
-#ROC
-randFROCR_Pre <- asROCRPrediction(randF_Pre)
-randFROCR_PreP <- ROCR::performance(randFROCR_Pre,"tpr","fpr")
-randFROCR_Pre1 <- asROCRPrediction(randF_Pre1)
-randFROCR_PreP1 <- ROCR::performance(randFROCR_Pre1,"tpr","fpr")
-
-
-ROCR::plot(randFROCR_PreP,col = "red")
-ROCR::plot(randFROCR_PreP1,col = "blue",add = TRUE)
-legend("bottomright",legend = c("Over","Under"),lty=1, col=c("red","blue"))
+cbind(as.data.frame(AggrandFCV_Task),as.data.frame(AggrandFCV_Under),as.data.frame(AggrandFCV_Over))
 
 ```
 
 
+As in logistic reg. original task perform bad for minority class, over-sampling has very high auc 0.99 while under-sampling has a good auc with 0.94
+I am gonna train both under and over tasks to compare their performance on the test set as I suspect overfitting for over-sampling
 
+<br />  
+
+*Train & Prediction*
+
+```{r cache= TRUE,results='hide'}
+
+randF_Mod_Over <- train(randF_learner, tr_Over)
+randF_Pre_Over <- predict(randF_Mod_Over,test_Task)
+
+randF_Mod_Under <- train(randF_learner, tr_Under)
+randF_Pre_Under <- predict(randF_Mod_Under,test_Task)
+```
+
+*Performance measure for train models*
+
+```{r}
+
+randF_Over_Mes<- mlr::performance(randF_Pre_Over,list(auc,acc,tpr,tnr,fpr))
+randF_Under_Mes<-mlr::performance(randF_Pre_Under,list(auc,acc,tpr,tnr,fpr))
+cbind(as.data.frame(randF_Over_Mes),as.data.frame(randF_Under_Mes))
+```
+
+<br />  
+
+Let us visualize the ROC curve(fpr vs. tpr) and Precision vs. Recall  
+
+There is more than one way to plot ROC curves, in this project we will use **generateThreshVsPerfData** and **plotROCCurves** functions for visualization and comparisons 
+
+```{r fig.height= 5 , fig.width=12}
+randFROCR_Th <- generateThreshVsPerfData(list(Over = randF_Pre_Over, Under = randF_Pre_Under), measures = list(tpr,fpr,ppv) )
+
+gridExtra::grid.arrange(plotROCCurves(randFROCR_Th,measures = list(fpr,tpr),diagonal = FALSE)+ggtitle("AUC") , plotROCCurves(randFROCR_Th,measures = list(tpr,ppv),diagonal = FALSE) + ggtitle("Precision vs Recall"),ncol = 2)
+
+```
+
+<br />  
+
+Both models have almost same performance measures in the test set, but over-sampling have 0.99 AUC on the training set and 0.94 on the test set while under-sampling maintains his AUC performance on both sets 0.94 which indicate that under-sampling is the more reliable model  
+
+We will consider under-sampling model the best model in the random forest in order to compare it with other models in other algorithms
+
+<br />  
+
+#### 2.3 Naive Bayes
+
+*Set learner for naive bayes*
+```{r}
+naiveBa_learner <- makeLearner("classif.naiveBayes",predict.type = "prob", fix.factors.prediction = TRUE)
+```
+
+*cross function*
+
+```{r cache= TRUE, results='hide'}
+naiveBaCV_Task<- resample(naiveBa_learner,tr_Task,res_Mod,measures = list(auc,acc,tpr,tnr,fpr))
+naiveBaCV_Under<- resample(naiveBa_learner,tr_Under,res_Mod,measures = list(auc,acc,tpr,tnr,fpr))
+naiveBaCV_Over<- resample(naiveBa_learner,tr_Over,res_Mod,measures = list(auc,acc,tpr,tnr,fpr))
+
+```
+
+*save performance measures*
+```{r}
+AggnaiveBaCV_Task<- naiveBaCV_Task$aggr
+AggnaiveBaCV_Under<- naiveBaCV_Under$aggr
+AggnaiveBaCV_Over<- naiveBaCV_Over$aggr
+
+```
+
+*Remove resample objects to save memory and Show performance measures*
+```{r}
+remove(naiveBaCV_Task,naiveBaCV_Over,naiveBaCV_Under)
+
+cbind(as.data.frame(AggnaiveBaCV_Task),as.data.frame(AggnaiveBaCV_Under),as.data.frame(AggnaiveBaCV_Over))
+
+```
+
+
+All 3 models have almost same AUC *0.92* let us train all of them and check their performance then  
+
+<br />  
+
+*Train & Prediction*
+```{r cache= TRUE,results='hide'}
+naiveBa_Mod_Original <- train(naiveBa_learner, tr_Task)
+naiveBa_Pre_Original <- predict(naiveBa_Mod_Original,test_Task)
+
+naiveBa_Mod_Over <- train(naiveBa_learner, tr_Over)
+naiveBa_Pre_Over <- predict(naiveBa_Mod_Over,test_Task)
+
+naiveBa_Mod_Under <- train(naiveBa_learner, tr_Under)
+naiveBa_Pre_Under <- predict(naiveBa_Mod_Under,test_Task)
+
+```
+
+*Performance measure for train models*
+```{r}
+naiveBa_Original_Mes<- mlr::performance(naiveBa_Pre_Original,list(auc,acc,tpr,tnr,fpr))
+naiveBa_Over_Mes<- mlr::performance(naiveBa_Pre_Over,list(auc,acc,tpr,tnr,fpr))
+naiveBa_Under_Mes<-mlr::performance(naiveBa_Pre_Under,list(auc,acc,tpr,tnr,fpr))
+
+cbind(as.data.frame(naiveBa_Original_Mes),as.data.frame(naiveBa_Over_Mes),as.data.frame(naiveBa_Under_Mes))
+```
+
+<br />  
+
+Let us visualize the ROC curve(fpr vs. tpr) and Precision vs. Recall  
+
+```{r fig.height= 5 , fig.width=12}
+naiveBaROCR_Th <- generateThreshVsPerfData(list(Original =naiveBa_Pre_Original, Over = naiveBa_Pre_Over, Under = naiveBa_Pre_Under),
+                                         measures = list(tpr,fpr,ppv) )
+gridExtra::grid.arrange(plotROCCurves(naiveBaROCR_Th,measures = list(fpr,tpr),diagonal = FALSE)+ggtitle("AUC") ,
+                        plotROCCurves(naiveBaROCR_Th,measures = list(tpr,ppv),diagonal = FALSE) + ggtitle("Precision vs Recall"),ncol = 2)
+
+```
+
+<br />  
+
+It seems original model is slightly better than other models (especially with tpr measure). We will consider the original model as the best one on the naive bayes  
+
+However, let us see how will SVM will perform  
+
+<br />  
+
+
+#### 2.4 SVM Model
+
+On process :)
