@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE,message=FALSE,warning=FALSE,comment="")
 Before we start with modeling let us take a minute to clarify a few things about this step and imbalanced dataset issue  
 
 ####1.1. Best Performance Measure
-***Is accuracy measure the best measure for imbalanced dataset classification model? Well! it's not***  
+***Is accuracy measure the best measure for an imbalanced dataset classification model? Well! it's not***  
 
 It's very common for classification model (especially with simple rule-based algorithm) to give ~90% accuracy when we have 90% of the instances fall into one class, simply because our models look at the data and cleverly decide that the best thing to do is to always predict this majority class and achieve high accuracy
 
@@ -42,7 +42,7 @@ In this project, we will use *Area Under the Curve (AUC)* to be the main perform
 ####1.2. Sampling Techniques
 ***Do we need sampling techniques?***  
 
-For imbalanced data, it's recommended to change the dataset to be more balanced in order to use it to build our predictive model  
+For an imbalanced data, it's recommended to change the dataset to be more balanced in order to use it to build our predictive model  
 
 This change is called sampling dataset and there are a few techniques could be used, in this project, we will use over-sampling & under-sampling techniques  
 
@@ -106,7 +106,7 @@ plotFilterValues(variable_Imp)
 
 ```
 
-Education and major occupation code could provide the highest info for our model while race variable has very litter to offer here  
+Education and major occupation code could provide the highest info for our model while race variable has very little to offer here  
 
 <br />  
 
@@ -140,7 +140,7 @@ There are many suggested solutions for this issue, do nothing and ignore the war
 
 The 2nd warning could be due to excess of variables (this often happen in logistic regression when we have too many variables)
 
-Anyhow, we will not go further in the logistic regression model, I just wanted to show the limitation of this model for our dataset. Let us check naive bayes model, we may have better luck with it.
+Anyhow, we will not go further into the logistic regression model, I just wanted to show the limitation of this model for our dataset. Let us check naive bayes model, we may have better luck with it.
 
 <br />  
 
@@ -163,7 +163,7 @@ nbCV_Over<- resample(nb_learner,tr_Over,res_Mod,measures = list(auc,acc,tpr,tnr,
 ```
 We applied 5 fold cross-validation on our resampling, therefore, before checking the aggregate result, we will take a look at the performance of each iteration in each set to see if there is abnormal behavior between the iterations (ROC and mmce)  
 
-There is more than one way to plot ROC curves, in this project we will use **generateThreshVsPerfData** and **plotROCCurves** , while we will use ggplot function to plot the error "mmce" 
+There is more than one way to plot ROC curves, in this project we will use **generateThreshVsPerfData** and **plotROCCurves**, while we will use ggplot function to plot the error "mmce" 
 
 *error and auc in each iter in each set*
 ```{r fig.height= 5 , fig.width=12}
@@ -181,7 +181,7 @@ gridExtra::grid.arrange(
   
 ```
 
-Well ! it seems all the iterations have very similer measures in each task  
+Well ! it seems all the iterations have very similar measures in each task  
 
 
 *save performance measures, remove resample objects to save memory, and print performance measures*
@@ -196,8 +196,8 @@ remove(nbCV_Task,nbCV_Over,nbCV_Under)
 cbind(as.data.frame(nb_Original),as.data.frame(nb_Under),as.data.frame(nb_Over))
 ```
 
-All 3 models almost have the same AUC *0.92*, original task has the best tpr while under and over tasks have the best tnr  
-let us train all of tasks and check their performance  
+All 3 models almost have the same AUC *0.92*, the original task has the best tpr while under and over tasks have the best tnr  
+let us train all the tasks and check their performance  
 
 <br />  
 
@@ -216,16 +216,16 @@ nb_Pre_Under <- predict(nb_Mod_Under,test_Task)
 
 
 
-Let us visualize the result the performance by ploting confusion matrixs and ROC curves  
+Let us visualize the result the performance by plotting confusion matrix and ROC curve  
 
-Usually with mlr package we can use *getConfMatrix* to show confusion matrix but in order to make a confusion matrix plot I will use ggplot with a few layers.  
+Usually, with mlr package, we can use *getConfMatrix* to show confusion matrix but in order to make a confusion matrix plot, I will use ggplot with a few layers.  
 
 *creating function to plot confusion matrix*
 <br />  
 
 ```{r}
 conf_Mat <- function(pre,con_title){
-  aa<- as.data.frame(table(f_test$income_level,pre$data$response)) 
+  aa<- as.data.frame(round(prop.table(table(f_test$income_level,pre$data$response))*100,2)) 
 
   plo_Con <- ggplot() +
     geom_tile(aes(x=Var1, y=Var2,fill=Freq),data=aa, color="white",size=0.1) +
@@ -272,7 +272,7 @@ It seems original model is slightly better than other models (especially with tp
 mlr::performance(nb_Pre_Original,list(auc))
 
 ```
-However, let us see if we can get better result with random forest model
+However, let us see if we can get a better result with random forest model
 
 <br />  
 
@@ -309,7 +309,7 @@ gridExtra::grid.arrange(
   
 ```
 
-Again as in naive bayes, all the iterations have very similer measures in each task  
+Again as in naive bayes, all the iterations have very similar measures in each task  
 
 *Save performance measures, remove resample objects to save memory and Show performance measures in one table*
 ```{r}
@@ -326,7 +326,7 @@ cbind(as.data.frame(rf_Original),as.data.frame(rf_Under),as.data.frame(rf_Over))
 
 Original task performs bad for tnr *0.37*, over-sampling has very high auc & tnr *0.99* while under-sampling has a good auc,tpr & tnr with *0.94*, *0.88* & *0.85* respectively  
 
-I am gonna train both under and over tasks to compare their performance on the test set as I suspect overfitting for over-sampling task in one of the classes
+I am gonna train both under and over tasks to compare their performance on the test set as I suspect overfitting for the over-sampling task in one of the classes
 
 <br />  
 
@@ -371,7 +371,7 @@ gridExtra::grid.arrange(
 
 Both models have almost same performance measures in the test set, but over-sampling have *0.99* AUC on the training set and *0.94* on the test set while under-sampling maintains his AUC performance on both sets *0.94* which indicate that under-sampling is the more reliable model  
 
-Also this model is better than the original naive bayes model(*auc 0.92*) therefore we can say that our best model in this project is random forest under-sampling with **0.94 auc**
+Also, this model is better than the original naive bayes model(*auc 0.92*), therefore, we can say that our best model in this project is random forest under-sampling with **0.94 auc**
 
 *Best model performance measures*
 ```{r}
@@ -381,10 +381,10 @@ mlr::performance(rf_Pre_Under,list(auc,acc,tpr,tnr,fpr,mmce))
 <br />  
 
 #### 2.4 Improvement?
-Actually there are some steps that we can do to imporve our model result but due to the limitation of my machine performance I couldn't run those steps. Below you can find 2 examples to improve our random forest under-sampling model
+Actually, there are some steps that we can do to improve our model result but due to the limitation of my machine performance, I couldn't run those steps. Below you can find 2 examples to improve our random forest under-sampling model
 
 ##### 2.4.1 Feature Selection
-We can use makeFeatSelControlRandom and selectFeatures functions to chose features that maximaze the auc measure as follow:
+We can use makeFeatSelControlRandom and selectFeatures functions to choose features that maximize the auc measure as follow:
 
 ctrl <- makeFeatSelControlRandom(maxit = 5)  
 

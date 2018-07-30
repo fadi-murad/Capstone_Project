@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE,message=FALSE,warning=FALSE ,message=FALSE,com
 
 ### 1- Missing Values
 
-First let us split the data sets to numeric and categorical, it's easier for this step
+First, let us split the data sets to numeric and categorical, it's easier for this step
 
 *Note: I saved the training and test sets from the data exploration step as RData files to be able to use it in this R MarkDown file
 *
@@ -43,7 +43,7 @@ test_cat <- test[catcol]
 <br />  
 
 
-Let’s check for missing values in numeric variables, We’ll use sapply() to find out percentage of missing values per each variable.
+Let’s check for missing values in numeric variables, We’ll use sapply() to find out the percentage of missing values per each variable.
 
 ```{r}
 trNumMissing <- sapply(tr_num, function(x){sum(is.na(x))/length(x)})
@@ -53,7 +53,7 @@ trNumMissing
 testNumMissing
 ```
 
-There is no missing values in the numerical variables.Anyhow, let us turn our focus now to the missing values in the categorical variables, 
+There are no missing values in the numerical variables. Anyhow, let us turn our focus now to the missing values in the categorical variables, 
 
 ```{r}
 trCatMissing <- sapply(tr_cat, function(x){sum(is.na(x))/length(x)})
@@ -65,7 +65,7 @@ testCatMissing
 
  
 There are 9 variables have missing values 3 of them have almost 50% missing values.
-We will dorp off variables with more than 10% missing values from our set
+We will drop off variables with more than 10% missing values from our set
 
 
 ```{r}
@@ -75,7 +75,7 @@ test_cat <- subset(test_cat, select = trCatMissing < 0.1)
 ```
 
 ###2. Near Zero Variance Variables
-During the exploration setp we saw alot of variables have one level with very high frequency
+During the exploration step we saw a lot of variables have one level with very high frequency
 (around 90% of the data belong to one level) while the other levels have very low 
 frequency ( between 1% to 4%), usually this kind of variables doesn't have much information
 to offer to the predictive models, we will use nearZeroVar function to locate those variables  
@@ -112,7 +112,7 @@ test_num$dividend_from_Stocks <- as.factor(ifelse(test_num$dividend_from_Stocks 
 
 ####2.2 Categorical Variables
 
-We will drop all the variable where **nearZeroVar** is true
+We will drop all the variables where **nearZeroVar** is true
 
 ```{r}
 nzvCat <- nearZeroVar(tr_cat,freqCut = 90/10, saveMetrics= TRUE)
@@ -128,17 +128,18 @@ test_cat[nzvCat$nzv == TRUE] <- NULL
 
 
 ###3. Checking Levels train/test
-When applying our classification model error could appear when we have level in test set that doesn't exist in the train set  
+When applying our classification model, error could appear when we have a level in test set that doesn't exist in the train set  
 
-Therefore we will check level count for each categorical variable in train and test sets
+Therefore we will check the level count for each categorical variable in train and test sets
+
 ```{r}
 summarizeColumns(tr_cat)[,"nlevs"]
 summarizeColumns(test_cat)[,"nlevs"]
 ```
 
-Only d_household_family_stat variable have one additonal level in the train set and this shouldn't be a problem  
+Only d_household_family_stat variable has one additional level in the train set and this shouldn't be a problem  
 
-However this variable has levels with very low frequency 6, 9, 37 ...., this will affect cross validation process for specific models later on, therefore and only for this variable, we will combain all the levels with less than 1% frequency to new level "others"
+However this variable has levels with very low frequency 6, 9, 37 ...., this will affect cross-validation process for specific models later on, therefore and only for this variable, we will combine all the levels with less than 1% frequency to new level "others"
 
 ```{r}
 #levels with less than 1% frequency

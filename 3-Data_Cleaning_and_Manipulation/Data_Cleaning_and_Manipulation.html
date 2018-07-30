@@ -226,7 +226,7 @@ div.tocify {
 
 <div id="missing-values" class="section level3">
 <h3>1- Missing Values</h3>
-<p>First let us split the data sets to numeric and categorical, it’s easier for this step</p>
+<p>First, let us split the data sets to numeric and categorical, it’s easier for this step</p>
 <p><em>Note: I saved the training and test sets from the data exploration step as RData files to be able to use it in this R MarkDown file </em></p>
 <pre class="r"><code>library(caret)
 library(mlr)
@@ -243,7 +243,7 @@ tr_cat &lt;- tr[catcol]
 test_num &lt;- test[numcol]
 test_cat &lt;- test[catcol]</code></pre>
 <p><br /></p>
-<p>Let’s check for missing values in numeric variables, We’ll use sapply() to find out percentage of missing values per each variable.</p>
+<p>Let’s check for missing values in numeric variables, We’ll use sapply() to find out the percentage of missing values per each variable.</p>
 <pre class="r"><code>trNumMissing &lt;- sapply(tr_num, function(x){sum(is.na(x))/length(x)})
 testNumMissing &lt;- sapply(test_num, function(x){sum(is.na(x)/length(x))})
 
@@ -265,7 +265,7 @@ trNumMissing</code></pre>
                          0                          0 
       weeks_worked_in_year               income_level 
                          0                          0 </code></pre>
-<p>There is no missing values in the numerical variables.Anyhow, let us turn our focus now to the missing values in the categorical variables,</p>
+<p>There are no missing values in the numerical variables. Anyhow, let us turn our focus now to the missing values in the categorical variables,</p>
 <pre class="r"><code>trCatMissing &lt;- sapply(tr_cat, function(x){sum(is.na(x))/length(x)})
 testCatMissing &lt;- sapply(test_cat, function(x){sum(is.na(x)/length(x))})
 
@@ -339,13 +339,13 @@ fill_questionnaire_veteran_admin                veterans_benefits
                      0.000000000                      0.000000000 
                             year 
                      0.000000000 </code></pre>
-<p>There are 9 variables have missing values 3 of them have almost 50% missing values. We will dorp off variables with more than 10% missing values from our set</p>
+<p>There are 9 variables have missing values 3 of them have almost 50% missing values. We will drop off variables with more than 10% missing values from our set</p>
 <pre class="r"><code>tr_cat &lt;- subset(tr_cat, select = trCatMissing &lt; 0.1 )
 test_cat &lt;- subset(test_cat, select = trCatMissing &lt; 0.1)</code></pre>
 </div>
 <div id="near-zero-variance-variables" class="section level3">
 <h3>2. Near Zero Variance Variables</h3>
-<p>During the exploration setp we saw alot of variables have one level with very high frequency (around 90% of the data belong to one level) while the other levels have very low frequency ( between 1% to 4%), usually this kind of variables doesn’t have much information to offer to the predictive models, we will use nearZeroVar function to locate those variables</p>
+<p>During the exploration step we saw a lot of variables have one level with very high frequency (around 90% of the data belong to one level) while the other levels have very low frequency ( between 1% to 4%), usually this kind of variables doesn’t have much information to offer to the predictive models, we will use nearZeroVar function to locate those variables</p>
 <p><strong>nearZeroVar</strong> diagnoses predictors that have one unique value or predictors that are have both of the following characteristics: They have very few unique values relative to the number of samples and the ratio of the frequency of the most common value to the frequency of the second most common value is large.</p>
 <div id="numeric-variable" class="section level4">
 <h4>2.1 Numeric Variable</h4>
@@ -370,7 +370,7 @@ test_num$dividend_from_Stocks &lt;- as.factor(ifelse(test_num$dividend_from_Stoc
 </div>
 <div id="categorical-variables" class="section level4">
 <h4>2.2 Categorical Variables</h4>
-<p>We will drop all the variable where <strong>nearZeroVar</strong> is true</p>
+<p>We will drop all the variables where <strong>nearZeroVar</strong> is true</p>
 <pre class="r"><code>nzvCat &lt;- nearZeroVar(tr_cat,freqCut = 90/10, saveMetrics= TRUE)
 subset(nzvCat, nzvCat$nzv == TRUE)</code></pre>
 <pre><code>                                 freqRatio percentUnique zeroVar  nzv
@@ -394,14 +394,14 @@ test_cat[nzvCat$nzv == TRUE] &lt;- NULL</code></pre>
 </div>
 <div id="checking-levels-traintest" class="section level3">
 <h3>3. Checking Levels train/test</h3>
-<p>When applying our classification model error could appear when we have level in test set that doesn’t exist in the train set</p>
-<p>Therefore we will check level count for each categorical variable in train and test sets</p>
+<p>When applying our classification model, error could appear when we have a level in test set that doesn’t exist in the train set</p>
+<p>Therefore we will check the level count for each categorical variable in train and test sets</p>
 <pre class="r"><code>summarizeColumns(tr_cat)[,&quot;nlevs&quot;]</code></pre>
 <pre><code> [1]  9 52 17  7 24 15  5  2  8  6 38  8  3  5  3  2</code></pre>
 <pre class="r"><code>summarizeColumns(test_cat)[,&quot;nlevs&quot;]</code></pre>
 <pre><code> [1]  9 52 17  7 24 15  5  2  8  6 37  8  3  5  3  2</code></pre>
-<p>Only d_household_family_stat variable have one additonal level in the train set and this shouldn’t be a problem</p>
-<p>However this variable has levels with very low frequency 6, 9, 37 …., this will affect cross validation process for specific models later on, therefore and only for this variable, we will combain all the levels with less than 1% frequency to new level “others”</p>
+<p>Only d_household_family_stat variable has one additional level in the train set and this shouldn’t be a problem</p>
+<p>However this variable has levels with very low frequency 6, 9, 37 …., this will affect cross-validation process for specific models later on, therefore and only for this variable, we will combine all the levels with less than 1% frequency to new level “others”</p>
 <pre class="r"><code>#levels with less than 1% frequency
 which(prop.table(table(tr_cat$d_household_family_stat)) &lt; 0.01)</code></pre>
 <pre><code>           Child &lt;18 ever marr not in subfamily 

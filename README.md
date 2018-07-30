@@ -2,14 +2,14 @@
 
 ## Problem Statement 
 #### *Predict the income class of US population*
-The aim for this project is to build a predictive model to determine the income level for people in US. The income levels are binned at below 50K and above 50K.
+The aim of this project is to build a predictive model to determine the income level for people in the US. The income levels are binned at below 50K and above 50K.
 
 ## Overview
 This is a binary classification problem with fairly huge data set (**300,000 records**) and imbalanced data (**94:6 class ratio**).
-We will build different predictive models and compare their performance in order to chose the best model 
+We will build different predictive models and compare their performance in order to choose the best model 
 
 ## Project Content
-I divided this project into 4 folders, the first folder contains data sets while the rest represt the steps of this project and contain the related R documents (in R, RMD and HTML formates) in addition 
+I divided this project into 4 folders, the first folder contains data sets while the rest represent the steps of this project and contain the related R documents (in R, RMD and HTML formats) in addition 
 to the related RData files
 
 ### 1- Data Set
@@ -35,8 +35,8 @@ http://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/
 
 * Machine Learning
   + Logistic Reg Model
-  + Random Forest Model
   + Naive Bayes
-  + SVM
+  + Random Forest Model
+  + Room for Improvement
+  
 
-* Comparsion: Choose the best model
