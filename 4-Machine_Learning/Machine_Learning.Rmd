@@ -260,7 +260,6 @@ gridExtra::grid.arrange(
   plotROCCurves(nbROCR_Th,measures = list(fpr,tpr),diagonal = FALSE) + ggtitle("AUC"),
   plotROCCurves(nbROCR_Th,measures = list(tpr,ppv),diagonal = FALSE) + ggtitle("Precision vs Recall"),
   ncol = 2)
-
 ```
 
 <br />  
@@ -364,7 +363,6 @@ gridExtra::grid.arrange(
   plotROCCurves(rfROCR_Th,measures = list(fpr,tpr),diagonal = FALSE)+ggtitle("AUC") ,
   plotROCCurves(rfROCR_Th,measures = list(tpr,ppv),diagonal = FALSE) + ggtitle("Precision vs Recall"),
   ncol = 2)
-
 ```
 
 <br />  
@@ -405,7 +403,6 @@ rf_C <- makeTuneControlGrid()
 *hypertune the parameters*  
 
 stune <- tuneParams(learner = rf_learner, resampling = res_Mod, task = tr_Under, par.set = rf_MP, control = rf_C, measures = auc)  
-
 
 
 
