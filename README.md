@@ -6,11 +6,10 @@ The aim of this project is to build a predictive model to determine the income l
 
 ## Overview
 This is a binary classification problem with fairly huge data set (**300,000 records**) and imbalanced data (**94:6 class ratio**).
-We will build different predictive models and compare their performance in order to choose the best model 
+We will build different predictive models and compare their performance in order to choose the best model. 
 
 ## Project Content
-I divided this project into 4 folders, the first folder contains data sets while the rest represent the steps of this project and contain the related R documents (in R, RMD and HTML formats) in addition 
-to the related RData files
+I divided this project into 4 folders, the first folder contains data sets while the rest represent the steps of this project and contain the related R documents (in R, RMD and HTML formats) in addition to the related RData files.
 
 ### 1- Data Set
 You can find train and test sets in csv format with columns names and ready to be loaded  
